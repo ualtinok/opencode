@@ -1497,6 +1497,10 @@ export type Config = {
      */
     continue_loop_on_deny?: boolean
     /**
+     * Enable /dump-context commands for debugging inference context
+     */
+    dump_context?: boolean
+    /**
      * Timeout in milliseconds for model context protocol (MCP) requests
      */
     mcp_timeout?: number

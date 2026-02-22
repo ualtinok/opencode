@@ -1212,6 +1212,10 @@ export namespace Config {
             .optional()
             .describe("Tools that should only be available to primary agents."),
           continue_loop_on_deny: z.boolean().optional().describe("Continue the agent loop when a tool call is denied"),
+          dump_context: z
+            .boolean()
+            .optional()
+            .describe("Enable /dump-context commands for debugging inference context"),
           mcp_timeout: z
             .number()
             .int()

@@ -81,6 +81,8 @@ import { DialogExportOptions } from "../../ui/dialog-export-options"
 import { formatTranscript } from "../../util/transcript"
 import { UI } from "@/cli/ui.ts"
 import { useTuiConfig } from "../../context/tui-config"
+import { ContextDump } from "@/session/dump"
+import { Instance } from "@/project/instance"
 
 addDefaultParsers(parsers.parsers)
 
@@ -924,9 +926,105 @@ export function Session() {
       },
     },
     {
-      title: "Go to child session",
-      value: "session.child.first",
-      keybind: "session_child_first",
+      title: "Dump inference context",
+      value: "session.dump_context",
+      category: "Session",
+      hidden: !sync.data.config.experimental?.dump_context,
+      slash: {
+        name: "dump-context",
+      },
+      onSelect: async (dialog) => {
+        try {
+          const selected = local.model.current()
+          if (!selected) {
+            toast.show({
+              variant: "warning",
+              message: "Connect a provider to dump context",
+              duration: 3000,
+            })
+            return
+          }
+          const model = sync.data.provider.find((x) => x.id === selected.providerID)?.models[selected.modelID]
+          if (!model) {
+            toast.show({ message: "Model not found", variant: "error" })
+            return
+          }
+          const agent = local.agent.current()
+          const directory = sync.data.path.directory
+          const filepath = await Instance.provide({
+            directory,
+            fn: async () => {
+              const content = await ContextDump.assemble({
+                sessionID: route.sessionID,
+                model,
+                agent,
+              })
+              return ContextDump.write({
+                sessionID: route.sessionID,
+                content,
+                format: "text",
+              })
+            },
+          })
+          toast.show({ message: `Context dumped to ${filepath}`, variant: "success" })
+        } catch (error) {
+          toast.show({ message: `Failed to dump context: ${error}`, variant: "error" })
+        }
+        dialog.clear()
+      },
+    },
+    {
+      title: "Dump inference context (JSON)",
+      value: "session.dump_context_json",
+      category: "Session",
+      hidden: !sync.data.config.experimental?.dump_context,
+      slash: {
+        name: "dump-context-json",
+      },
+      onSelect: async (dialog) => {
+        try {
+          const selected = local.model.current()
+          if (!selected) {
+            toast.show({
+              variant: "warning",
+              message: "Connect a provider to dump context",
+              duration: 3000,
+            })
+            return
+          }
+          const model = sync.data.provider.find((x) => x.id === selected.providerID)?.models[selected.modelID]
+          if (!model) {
+            toast.show({ message: "Model not found", variant: "error" })
+            return
+          }
+          const agent = local.agent.current()
+          const directory = sync.data.path.directory
+          const filepath = await Instance.provide({
+            directory,
+            fn: async () => {
+              const content = await ContextDump.assemble({
+                sessionID: route.sessionID,
+                model,
+                agent,
+              })
+              return ContextDump.write({
+                sessionID: route.sessionID,
+                content,
+                format: "json",
+              })
+            },
+          })
+          toast.show({ message: `Context dumped to ${filepath}`, variant: "success" })
+        } catch (error) {
+          toast.show({ message: `Failed to dump context: ${error}`, variant: "error" })
+        }
+        dialog.clear()
+      },
+    },
+    {
+      title: "Next child session",
+      value: "session.child.next",
+      keybind: "session_child_cycle",
       category: "Session",
       hidden: true,
       onSelect: (dialog) => {
