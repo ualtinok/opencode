@@ -36,7 +36,7 @@ export namespace ContextDump {
         .join("\n"),
     )
 
-    const messages = MessageV2.toModelMessages(msgs, input.model)
+    const raw = MessageV2.toModelMessages(msgs, input.model)
 
     // Provider options (llm.ts:99-152)
     const provider = await Provider.getProvider(input.model.providerID)
@@ -55,7 +55,9 @@ export namespace ContextDump {
     const maxOutputTokens = ProviderTransform.maxOutputTokens(input.model)
     const providerOptions = ProviderTransform.providerOptions(input.model, merged)
 
-    // Note: ProviderTransform.message() middleware runs inside wrapLanguageModel at AI SDK call time and is NOT captured here — the dump reflects pre-middleware state
+    const messages = ProviderTransform.message(raw, input.model, merged)
+
+    // Note: This captures post-ProviderTransform.message() state. Provider SDK adapter serialization still happens after this.
     return {
       system,
       messages,
