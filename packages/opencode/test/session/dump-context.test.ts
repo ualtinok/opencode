@@ -10,6 +10,25 @@ Log.init({ print: false })
 
 type DumpContent = Parameters<typeof ContextDump.write>[0]["content"]
 
+const request: DumpContent["request"] = {
+  tools: {},
+  activeTools: [],
+  toolChoice: undefined,
+  headers: {},
+  maxRetries: 0,
+  abort: {
+    present: false,
+    aborted: false,
+  },
+  experimentalTelemetry: {
+    isEnabled: false,
+    metadata: {
+      userId: "unknown",
+      sessionId: "test",
+    },
+  },
+}
+
 describe("ContextDump.write", () => {
   test("write creates text file with section headers", async () => {
     await using tmp = await tmpdir()
@@ -29,6 +48,7 @@ describe("ContextDump.write", () => {
             maxOutputTokens: 32000,
             providerOptions: { anthropic: { store: false } },
           },
+          request,
         }
         const filepath = await ContextDump.write({
           sessionID: "test-session-123",
@@ -62,6 +82,7 @@ describe("ContextDump.write", () => {
             maxOutputTokens: 32000,
             providerOptions: {},
           },
+          request,
         }
         const filepath = await ContextDump.write({
           sessionID: "json-test-456",
@@ -92,6 +113,7 @@ describe("ContextDump.write", () => {
             maxOutputTokens: 32000,
             providerOptions: {},
           },
+          request,
         }
         const filepath = await ContextDump.write({
           sessionID: "dir-test",
@@ -118,6 +140,7 @@ describe("ContextDump.write", () => {
             maxOutputTokens: 32000,
             providerOptions: {},
           },
+          request,
         }
         const filepath = await ContextDump.write({
           sessionID: "sess-abc",
