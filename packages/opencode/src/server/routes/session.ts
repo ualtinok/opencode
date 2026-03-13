@@ -19,6 +19,8 @@ import { PermissionID } from "@/permission/schema"
 import { ModelID, ProviderID } from "@/provider/schema"
 import { errors } from "../error"
 import { lazy } from "../../util/lazy"
+import { Provider } from "@/provider/provider"
+import { ContextDump } from "@/session/dump"
 
 const log = Log.create({ service: "server" })
 
@@ -541,6 +543,65 @@ export const SessionRoutes = lazy(() =>
         })
         await SessionPrompt.loop({ sessionID })
         return c.json(true)
+      },
+    )
+    .post(
+      "/:sessionID/dump-context",
+      describeRoute({
+        summary: "Dump inference context",
+        description:
+          "Dump the full inference context for debugging, including system prompt, messages, tools, and provider options.",
+        operationId: "session.dump_context",
+        responses: {
+          200: {
+            description: "Context dump file path",
+            content: {
+              "application/json": {
+                schema: resolver(z.object({ path: z.string() })),
+              },
+            },
+          },
+          ...errors(400, 404),
+        },
+      }),
+      validator(
+        "param",
+        z.object({
+          sessionID: SessionID.zod,
+        }),
+      ),
+      validator(
+        "json",
+        z.object({
+          providerID: ProviderID.zod,
+          modelID: ModelID.zod,
+          format: z.enum(["text", "json"]).optional().default("text"),
+        }),
+      ),
+      async (c) => {
+        const sessionID = c.req.valid("param").sessionID
+        const body = c.req.valid("json")
+        const model = await Provider.getModel(body.providerID, body.modelID)
+        const msgs = await Session.messages({ sessionID })
+        let name = await Agent.defaultAgent()
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          if (msgs[i].info.role === "user") {
+            name = msgs[i].info.agent || name
+            break
+          }
+        }
+        const agent = await Agent.get(name)
+        const content = await ContextDump.assemble({
+          sessionID,
+          model,
+          agent,
+        })
+        const filepath = await ContextDump.write({
+          sessionID,
+          content,
+          format: body.format,
+        })
+        return c.json({ path: filepath })
       },
     )
     .get(
