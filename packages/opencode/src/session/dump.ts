@@ -19,11 +19,12 @@ import { Identifier } from "@/id/id"
 import { Flag } from "@/flag/flag"
 import { Installation } from "@/installation"
 import { LLM } from "./llm"
+import { MessageID, SessionID } from "./schema"
 
 export namespace ContextDump {
   // Mirrors context assembly in LLM.stream() (llm.ts). If you change LLM.stream(), update this.
   export async function assemble(input: {
-    sessionID: string
+    sessionID: SessionID
     model: Provider.Model
     agent: Agent.Info
     toolChoice?: "auto" | "required" | "none"
@@ -126,7 +127,7 @@ export namespace ContextDump {
 
     const processor = SessionProcessor.create({
       assistantMessage: {
-        id: Identifier.ascending("message"),
+        id: MessageID.make(Identifier.ascending("message")),
         role: "assistant",
         parentID: user.info.id,
         mode: input.agent.name,
@@ -247,7 +248,7 @@ export namespace ContextDump {
   }
 
   export async function write(input: {
-    sessionID: string
+    sessionID: SessionID
     content: Awaited<ReturnType<typeof assemble>>
     format: "text" | "json"
   }) {

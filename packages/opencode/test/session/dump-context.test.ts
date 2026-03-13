@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import path from "path"
 import { ContextDump } from "../../src/session/dump"
 import { Instance } from "../../src/project/instance"
+import { SessionID } from "../../src/session/schema"
 import { Log } from "../../src/util/log"
 import { tmpdir } from "../fixture/fixture"
 import type { ModelMessage } from "ai"
@@ -24,7 +25,7 @@ const request: DumpContent["request"] = {
     isEnabled: false,
     metadata: {
       userId: "unknown",
-      sessionId: "test",
+      sessionId: SessionID.make("test"),
     },
   },
 }
@@ -51,7 +52,7 @@ describe("ContextDump.write", () => {
           request,
         }
         const filepath = await ContextDump.write({
-          sessionID: "test-session-123",
+          sessionID: SessionID.make("test-session-123"),
           content,
           format: "text",
         })
@@ -85,7 +86,7 @@ describe("ContextDump.write", () => {
           request,
         }
         const filepath = await ContextDump.write({
-          sessionID: "json-test-456",
+          sessionID: SessionID.make("json-test-456"),
           content,
           format: "json",
         })
@@ -116,7 +117,7 @@ describe("ContextDump.write", () => {
           request,
         }
         const filepath = await ContextDump.write({
-          sessionID: "dir-test",
+          sessionID: SessionID.make("dir-test"),
           content,
           format: "text",
         })
@@ -143,7 +144,7 @@ describe("ContextDump.write", () => {
           request,
         }
         const filepath = await ContextDump.write({
-          sessionID: "sess-abc",
+          sessionID: SessionID.make("sess-abc"),
           content,
           format: "text",
         })

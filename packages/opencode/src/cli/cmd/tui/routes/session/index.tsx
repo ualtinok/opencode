@@ -83,6 +83,10 @@ import { UI } from "@/cli/ui.ts"
 import { useTuiConfig } from "../../context/tui-config"
 import { ContextDump } from "@/session/dump"
 import { Instance } from "@/project/instance"
+import { SessionID } from "@/session/schema"
+import { Agent } from "@/agent/agent"
+import { Provider } from "@/provider/provider"
+import { ModelID, ProviderID } from "@/provider/schema"
 
 addDefaultParsers(parsers.parsers)
 
@@ -951,16 +955,22 @@ export function Session() {
           }
           const agent = local.agent.current()
           const directory = sync.data.path.directory
+          const sessionID = SessionID.make(route.sessionID)
           const filepath = await Instance.provide({
             directory,
             fn: async () => {
+              const model = await Provider.getModel(
+                ProviderID.make(selected.providerID),
+                ModelID.make(selected.modelID),
+              )
+              const info = await Agent.get(agent.name)
               const content = await ContextDump.assemble({
-                sessionID: route.sessionID,
+                sessionID,
                 model,
-                agent,
+                agent: info,
               })
               return ContextDump.write({
-                sessionID: route.sessionID,
+                sessionID,
                 content,
                 format: "text",
               })
@@ -999,16 +1009,22 @@ export function Session() {
           }
           const agent = local.agent.current()
           const directory = sync.data.path.directory
+          const sessionID = SessionID.make(route.sessionID)
           const filepath = await Instance.provide({
             directory,
             fn: async () => {
+              const model = await Provider.getModel(
+                ProviderID.make(selected.providerID),
+                ModelID.make(selected.modelID),
+              )
+              const info = await Agent.get(agent.name)
               const content = await ContextDump.assemble({
-                sessionID: route.sessionID,
+                sessionID,
                 model,
-                agent,
+                agent: info,
               })
               return ContextDump.write({
-                sessionID: route.sessionID,
+                sessionID,
                 content,
                 format: "json",
               })
