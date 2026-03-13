@@ -482,6 +482,65 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
         },
       }),
       sessionCommand({
+        id: "session.dump_context",
+        title: "Dump inference context",
+        slash: "dump-context",
+        disabled: !params.id || !sync.data.config.experimental?.dump_context,
+        onSelect: async () => {
+          const sessionID = params.id
+          if (!sessionID) return
+          const model = local.model.current()
+          if (!model) {
+            showToast({
+              title: language.t("toast.model.none.title"),
+              description: language.t("toast.model.none.description"),
+            })
+            return
+          }
+          const result = await sdk.client.session.dumpContext({
+            sessionID,
+            providerID: model.provider.id,
+            modelID: model.id,
+          })
+          if (!result.data?.path) return
+          await sdk.client.session.promptAsync({
+            sessionID,
+            noReply: true,
+            parts: [{ type: "text", text: `Context dumped to \`${result.data.path}\`` }],
+          })
+        },
+      }),
+      sessionCommand({
+        id: "session.dump_context_json",
+        title: "Dump inference context (JSON)",
+        slash: "dump-context-json",
+        disabled: !params.id || !sync.data.config.experimental?.dump_context,
+        onSelect: async () => {
+          const sessionID = params.id
+          if (!sessionID) return
+          const model = local.model.current()
+          if (!model) {
+            showToast({
+              title: language.t("toast.model.none.title"),
+              description: language.t("toast.model.none.description"),
+            })
+            return
+          }
+          const result = await sdk.client.session.dumpContext({
+            sessionID,
+            providerID: model.provider.id,
+            modelID: model.id,
+            format: "json",
+          })
+          if (!result.data?.path) return
+          await sdk.client.session.promptAsync({
+            sessionID,
+            noReply: true,
+            parts: [{ type: "text", text: `Context dumped to \`${result.data.path}\`` }],
+          })
+        },
+      }),
+      sessionCommand({
         id: "session.fork",
         title: language.t("command.session.fork"),
         description: language.t("command.session.fork.description"),
