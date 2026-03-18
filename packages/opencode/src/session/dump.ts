@@ -22,7 +22,7 @@ import { LLM } from "./llm"
 import { MessageID, SessionID } from "./schema"
 
 export namespace ContextDump {
-  // Mirrors context assembly in LLM.stream() (llm.ts). If you change LLM.stream(), update this.
+  // Mirrors context assembly in prompt.ts loop() + LLM.stream(). If you change either, update this.
   export async function assemble(input: {
     sessionID: SessionID
     model: Provider.Model
@@ -32,7 +32,7 @@ export namespace ContextDump {
     small?: boolean
     abort?: AbortSignal
   }) {
-    const msgs = await Session.messages({ sessionID: input.sessionID })
+    const msgs = await MessageV2.filterCompacted(MessageV2.stream(input.sessionID))
     const session = await Session.get(input.sessionID)
     const user = msgs.findLast((m) => m.info.role === "user")
     if (!user || user.info.role !== "user") throw new Error("No user message found for context dump")
@@ -73,6 +73,9 @@ export namespace ContextDump {
       system.length = 0
       system.push(header, rest.join("\n"))
     }
+
+    // Apply plugin message transforms (prompt.ts:651) — must run before toModelMessages
+    await Plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
     const raw = MessageV2.toModelMessages(msgs, input.model)
 
