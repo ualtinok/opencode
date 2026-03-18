@@ -497,6 +497,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
             })
             return
           }
+          const agent = local.agent.current()
           const result = await sdk.client.session.dumpContext({
             sessionID,
             providerID: model.provider.id,
@@ -506,7 +507,12 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
           await sdk.client.session.promptAsync({
             sessionID,
             noReply: true,
-            parts: [{ type: "text", text: `Context dumped to \`${result.data.path}\`` }],
+            agent: agent?.name,
+            model: {
+              providerID: model.provider.id,
+              modelID: model.id,
+            },
+            parts: [{ type: "text", text: `Context dumped to \`${result.data.path}\``, ignored: true }],
           })
         },
       }),
@@ -526,6 +532,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
             })
             return
           }
+          const agent = local.agent.current()
           const result = await sdk.client.session.dumpContext({
             sessionID,
             providerID: model.provider.id,
@@ -536,7 +543,12 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
           await sdk.client.session.promptAsync({
             sessionID,
             noReply: true,
-            parts: [{ type: "text", text: `Context dumped to \`${result.data.path}\`` }],
+            agent: agent?.name,
+            model: {
+              providerID: model.provider.id,
+              modelID: model.id,
+            },
+            parts: [{ type: "text", text: `Context dumped to \`${result.data.path}\``, ignored: true }],
           })
         },
       }),
